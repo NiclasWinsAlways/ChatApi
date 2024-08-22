@@ -16,7 +16,10 @@ namespace ChatApp.Repositories
         User GetUserByUsername(string username);
         User AddUser(User user);
         IEnumerable<User> GetAllUsers();
-        void UpdateUser(User user); // New method to update a user
-        void DeleteUser(int id); // New method to delete a user
+        void UpdateUser(User user);
+        void DeleteUser(int id);
+        ChatMessage GetMessageById(int id); // New method to get a message by ID
+        void UpdateMessage(ChatMessage message); // New method to update a message
+        void DeleteMessage(int id); // New method to delete a message
     }
 }

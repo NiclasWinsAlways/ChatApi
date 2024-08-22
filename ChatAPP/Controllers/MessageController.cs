@@ -63,7 +63,51 @@ namespace ChatApp.Controllers
             return CreatedAtAction(nameof(GetMessagesInChatRoom), new { chatRoomId }, messageDto);
         }
 
-        // This method should ideally be in ChatRoomController, but if it needs to be here:
-      
+        // Get a specific message by ID
+        [HttpGet("{chatRoomId}/messages/{messageId}")]
+        public ActionResult<ChatMessageDto> GetMessageById(int chatRoomId, int messageId)
+        {
+            var message = _repository.GetMessageById(messageId);
+            if (message == null || message.ChatRoomId != chatRoomId) return NotFound();
+
+            var messageDto = new ChatMessageDto
+            {
+                Id = message.Id,
+                Message = message.Message,
+                Timestamp = message.Timestamp,
+                UserId = message.UserId,
+                Username = message.User.Username,
+                ChatRoomId = message.ChatRoomId
+            };
+
+            return Ok(messageDto);
+        }
+
+        // Update a message
+        [HttpPut("{chatRoomId}/messages/{messageId}")]
+        public ActionResult UpdateMessage(int chatRoomId, int messageId, ChatMessageDto messageDto)
+        {
+            var message = _repository.GetMessageById(messageId);
+            if (message == null || message.ChatRoomId != chatRoomId) return NotFound();
+
+            message.Message = messageDto.Message;
+            message.Timestamp = messageDto.Timestamp;
+
+            _repository.UpdateMessage(message);
+
+            return Ok("Message updated successfully.");
+        }
+
+        // Delete a message
+        [HttpDelete("{chatRoomId}/messages/{messageId}")]
+        public ActionResult DeleteMessage(int chatRoomId, int messageId)
+        {
+            var message = _repository.GetMessageById(messageId);
+            if (message == null || message.ChatRoomId != chatRoomId) return NotFound();
+
+            _repository.DeleteMessage(messageId);
+
+            return Ok("Message deleted successfully.");
+        }
     }
 }

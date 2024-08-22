@@ -15,12 +15,12 @@ namespace ChatApp.Repositories
             _context = context;
         }
 
-        // Implementations of interface methods
-
+        // ChatRoom related methods
         public IEnumerable<ChatRoom> GetChatRooms()
         {
             return _context.ChatRooms
                 .Include(r => r.Users)
+                .Include(r => r.Messages)
                 .ToList();
         }
 
@@ -49,30 +49,7 @@ namespace ChatApp.Repositories
             }
         }
 
-        public IEnumerable<ChatMessage> GetMessages(int chatRoomId)
-        {
-            return _context.ChatMessages
-                .Where(m => m.ChatRoomId == chatRoomId)
-                .Include(m => m.User) // Include the User to avoid lazy loading issues
-                .OrderBy(m => m.Timestamp)
-                .ToList();
-        }
-
-        public IEnumerable<ChatMessage> GetAllMessages()
-        {
-            return _context.ChatMessages
-                .Include(m => m.User) // Include the User to avoid lazy loading issues
-                .OrderBy(m => m.Timestamp)
-                .ToList();
-        }
-
-        public ChatMessage AddMessage(ChatMessage message)
-        {
-            _context.ChatMessages.Add(message);
-            _context.SaveChanges();
-            return message;
-        }
-
+        // User related methods
         public User GetUser(int id)
         {
             return _context.Users.FirstOrDefault(u => u.Id == id);
@@ -85,7 +62,6 @@ namespace ChatApp.Repositories
 
         public User AddUser(User user)
         {
-            // Directly store the password in plain text
             _context.Users.Add(user);
             _context.SaveChanges();
             return user;
@@ -114,8 +90,56 @@ namespace ChatApp.Repositories
 
         public bool VerifyUserPassword(User user, string password)
         {
-            // Directly compare the stored password with the input password
             return user.Password == password;
+        }
+
+        
+        // ChatMessage related methods
+        public IEnumerable<ChatMessage> GetMessages(int chatRoomId)
+        {
+            return _context.ChatMessages
+                .Where(m => m.ChatRoomId == chatRoomId)
+                .Include(m => m.User) // Include the User to avoid lazy loading issues
+                .OrderBy(m => m.Timestamp)
+                .ToList();
+        }
+
+        public IEnumerable<ChatMessage> GetAllMessages()
+        {
+            return _context.ChatMessages
+                .Include(m => m.User) // Include the User to avoid lazy loading issues
+                .OrderBy(m => m.Timestamp)
+                .ToList();
+        }
+
+        public ChatMessage GetMessageById(int id)
+        {
+            return _context.ChatMessages
+                .Include(m => m.User) // Include User to avoid lazy loading
+                .FirstOrDefault(m => m.Id == id);
+        }
+
+        public ChatMessage AddMessage(ChatMessage message)
+        {
+            _context.ChatMessages.Add(message);
+            _context.SaveChanges();
+            return message;
+        }
+
+        public void UpdateMessage(ChatMessage message)
+        {
+            _context.ChatMessages.Update(message);
+            _context.SaveChanges();
+        }
+
+        public void DeleteMessage(int id)
+        {
+            var message = GetMessageById(id);
+            if (message != null)
+            {
+                _context.ChatMessages.Remove(message);
+                _context.SaveChanges();
+            }
         }
     }
 }
