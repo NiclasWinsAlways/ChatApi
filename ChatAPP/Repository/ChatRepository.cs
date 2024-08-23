@@ -24,6 +24,19 @@ namespace ChatApp.Repositories
                 .ToList();
         }
 
+        public User GetUserByEmail(string email)
+        {
+            return _context.Users.FirstOrDefault(u => u.Email == email);
+        }
+        public void UpdateUser(User user)
+        {
+            _context.Users.Update(user);
+            _context.SaveChanges();
+        }
+        public bool IsUserAdmin(User user)
+        {
+            return user.Role == "Admin";
+        }
         public ChatRoom GetChatRoom(int id)
         {
             return _context.ChatRooms
@@ -59,9 +72,10 @@ namespace ChatApp.Repositories
         {
             return _context.Users.FirstOrDefault(u => u.Username == username);
         }
-
         public User AddUser(User user)
         {
+            // Default the role to "User" if not specified
+            user.Role = string.IsNullOrEmpty(user.Role) ? "User" : user.Role;
             _context.Users.Add(user);
             _context.SaveChanges();
             return user;
@@ -72,11 +86,8 @@ namespace ChatApp.Repositories
             return _context.Users.ToList();
         }
 
-        public void UpdateUser(User user)
-        {
-            _context.Users.Update(user);
-            _context.SaveChanges();
-        }
+       
+
 
         public void DeleteUser(int id)
         {

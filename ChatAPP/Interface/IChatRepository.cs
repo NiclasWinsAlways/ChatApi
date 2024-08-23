@@ -13,13 +13,15 @@ namespace ChatApp.Repositories
         IEnumerable<ChatMessage> GetAllMessages();
         ChatMessage AddMessage(ChatMessage message);
         User GetUser(int id);
-        User GetUserByUsername(string username);
+        User GetUserByEmail(string email);
+        User GetUserByUsername(string username); 
+
         User AddUser(User user);
         IEnumerable<User> GetAllUsers();
         void UpdateUser(User user);
         void DeleteUser(int id);
-        ChatMessage GetMessageById(int id); // New method to get a message by ID
-        void UpdateMessage(ChatMessage message); // New method to update a message
-        void DeleteMessage(int id); // New method to delete a message
+        ChatMessage GetMessageById(int id); // Method to get a message by ID
+        void UpdateMessage(ChatMessage message); // Method to update a message
+        void DeleteMessage(int id); // Method to delete a message
     }
 }
