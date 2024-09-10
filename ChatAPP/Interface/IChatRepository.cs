@@ -23,5 +23,7 @@ namespace ChatApp.Repositories
         ChatMessage GetMessageById(int id); // Method to get a message by ID
         void UpdateMessage(ChatMessage message); // Method to update a message
         void DeleteMessage(int id); // Method to delete a message
+        User GetUserById(int id);
+
     }
 }

@@ -22,6 +22,12 @@ namespace ChatApp.Controllers
         [HttpPost("register")]
         public ActionResult Register(RegisterUserDto registerDto)
         {
+            // Check if email is provided and valid
+            if (string.IsNullOrEmpty(registerDto.Email))
+            {
+                return BadRequest("Email is required.");
+            }
+
             var existingUser = _repository.GetUserByEmail(registerDto.Email);
             if (existingUser != null)
             {
@@ -30,16 +36,19 @@ namespace ChatApp.Controllers
 
             var user = new User
             {
-                Username = string.IsNullOrEmpty(registerDto.Username) ? null : registerDto.Username,  // Handle nullable username
+                Username = string.IsNullOrEmpty(registerDto.Username) ? null : registerDto.Username,
                 Email = registerDto.Email,
                 Password = registerDto.Password,
                 Role = "User"
             };
 
+            // Save the new user and let the DB generate the ID
             _repository.AddUser(user);
 
-            return Ok("User registered successfully.");
+            return Ok(new { userId = user.Id, message = "User registered successfully." });
         }
+
+
 
         // Promote a user to admin
         [HttpPost("promote/{id}")]
@@ -58,20 +67,30 @@ namespace ChatApp.Controllers
         }
 
         // Login a user with email
+        // Login a user with email and password
         [HttpPost("login")]
         public ActionResult Login(LoginUserDto loginDto)
         {
+            // Retrieve the user from the repository by email
             var user = _repository.GetUserByEmail(loginDto.Email);
+
+            // Check if the user exists and the password matches
             if (user == null || user.Password != loginDto.Password)
             {
                 return Unauthorized("Invalid email or password.");
             }
 
-            // Check if the user is an admin
-            bool isAdmin = user.Role == "Admin";
-
-            return Ok(new { message = "Login successful.", isAdmin });
+            // Return userId, username, message, and isAdmin in the response
+            return Ok(new
+            {
+                userId = user.Id,
+                username = user.Username,  // Retrieve the username from the user object
+                message = "Login successful.",
+                isAdmin = user.Role == "Admin"
+            });
         }
+
+
 
         // Get all users
         [HttpGet("accounts")]

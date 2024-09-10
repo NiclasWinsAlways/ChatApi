@@ -151,6 +151,12 @@ namespace ChatApp.Repositories
                 _context.ChatMessages.Remove(message);
                 _context.SaveChanges();
             }
+
         }
+        public User GetUserById(int id)
+        {
+            return _context.Users.FirstOrDefault(u => u.Id == id);
+        }
+
     }
 }
