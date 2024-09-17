@@ -9,6 +9,9 @@
         public string? Password { get; set; }
         public string Role { get; set; } = "User"; // Default role is User
 
+        // Add AvatarUrl property to store the avatar image URL
+        public string? AvatarUrl { get; set; }
+
         // Relationships
         public ICollection<ChatRoom> ChatRooms { get; set; }
         public ICollection<ChatMessage> Messages { get; set; }

@@ -1,3 +1,12 @@
-﻿NOTES TO SELF IN THE FUTURE
+﻿SHIT TO ADD FOR PROJECT LATER
 
-FIX REAL TIME COMMUNNICATION WITH SIGNALR
+
+CONTENT:
+Password Encryption
+Easy: Typing indicators, custom avatars, emoji picker, message deletion/editing.
+Moderate: User mentions, read receipts, message reactions, file sharing.
+Hard: Private messaging, group chats, online status, custom themes.
+Advanced: End-to-end encryption, audio/video calls, real-time location sharing, AI chatbot.
+
+
+-Check out Cordova later if needed
