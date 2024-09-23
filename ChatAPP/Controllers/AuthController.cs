@@ -11,6 +11,7 @@ namespace ChatApp.Controllers
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
+        // Injecting the IChatRepository dependency via the constructor
         private readonly IChatRepository _repository;
 
         public AuthController(IChatRepository repository)
@@ -18,7 +19,7 @@ namespace ChatApp.Controllers
             _repository = repository;
         }
 
-        // Register a new user with email
+        // Endpoint to register a new user
         [HttpPost("register")]
         public ActionResult Register(RegisterUserDto registerDto)
         {
@@ -28,46 +29,47 @@ namespace ChatApp.Controllers
                 return BadRequest("Email is required.");
             }
 
+            // Check if the email is already registered
             var existingUser = _repository.GetUserByEmail(registerDto.Email);
             if (existingUser != null)
             {
                 return BadRequest("Email already registered.");
             }
 
+            // Create a new User object
             var user = new User
             {
                 Username = string.IsNullOrEmpty(registerDto.Username) ? null : registerDto.Username,
                 Email = registerDto.Email,
                 Password = registerDto.Password,
-                Role = "User"
+                Role = "User"  // Default role is set to "User"
             };
 
-            // Save the new user and let the DB generate the ID
+            // Save the user to the database
             _repository.AddUser(user);
 
             return Ok(new { userId = user.Id, message = "User registered successfully." });
         }
 
-
-
-        // Promote a user to admin
+        // Endpoint to promote a user to admin
         [HttpPost("promote/{id}")]
         public ActionResult PromoteToAdmin(int id)
         {
+            // Fetch user by their ID
             var user = _repository.GetUser(id);
             if (user == null)
             {
                 return NotFound("User not found.");
             }
 
+            // Update the user's role to Admin
             user.Role = "Admin";
             _repository.UpdateUser(user);
 
             return Ok("User promoted to admin successfully.");
         }
 
-        // Login a user with email
-        // Login a user with email and password
+        // Endpoint to login a user
         [HttpPost("login")]
         public ActionResult Login(LoginUserDto loginDto)
         {
@@ -80,7 +82,7 @@ namespace ChatApp.Controllers
                 return Unauthorized("Invalid email or password.");
             }
 
-            // Return userId, username, message, and isAdmin in the response
+            // Return a success message along with user details
             return Ok(new
             {
                 userId = user.Id,
@@ -90,12 +92,11 @@ namespace ChatApp.Controllers
             });
         }
 
-
-
-        // Get all users
+        // Endpoint to get all users
         [HttpGet("accounts")]
         public ActionResult<IEnumerable<UserDto>> GetAccounts()
         {
+            // Fetch all users from the repository
             var users = _repository.GetAllUsers()
                 .Select(user => new UserDto
                 {
@@ -108,16 +109,18 @@ namespace ChatApp.Controllers
             return Ok(users);
         }
 
-        // Get a user by ID
+        // Endpoint to get a user by ID
         [HttpGet("accounts/{id}")]
         public ActionResult<UserDto> GetAccountById(int id)
         {
+            // Fetch user by ID
             var user = _repository.GetUser(id);
             if (user == null)
             {
                 return NotFound("User not found.");
             }
 
+            // Map user to UserDto
             var userDto = new UserDto
             {
                 Id = user.Id,
@@ -129,17 +132,18 @@ namespace ChatApp.Controllers
             return Ok(userDto);
         }
 
-        // Update a user by ID
+        // Endpoint to update a user by ID
         [HttpPut("accounts/{id}")]
         public ActionResult UpdateAccount(int id, UpdateUserDto updateUserDto)
         {
+            // Fetch user by ID
             var user = _repository.GetUser(id);
             if (user == null)
             {
                 return NotFound("User not found.");
             }
 
-            // Update user properties only if they are provided
+            // Update user properties only if provided
             if (!string.IsNullOrEmpty(updateUserDto.Username))
             {
                 user.Username = updateUserDto.Username;
@@ -167,21 +171,24 @@ namespace ChatApp.Controllers
                 user.Role = updateUserDto.Role;
             }
 
+            // Update the user in the repository
             _repository.UpdateUser(user);
 
             return Ok("User updated successfully.");
         }
 
-        // Delete a user by ID
+        // Endpoint to delete a user by ID
         [HttpDelete("accounts/{id}")]
         public ActionResult DeleteAccount(int id)
         {
+            // Fetch user by ID
             var user = _repository.GetUser(id);
             if (user == null)
             {
                 return NotFound("User not found.");
             }
 
+            // Delete the user from the repository
             _repository.DeleteUser(id);
 
             return Ok("User deleted successfully.");
