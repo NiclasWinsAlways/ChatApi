@@ -11,6 +11,7 @@ namespace ChatApp.Controllers
     [Route("api/[controller]")]
     public class ChatRoomController : ControllerBase
     {
+        // Injecting the IChatRepository dependency via the constructor
         private readonly IChatRepository _repository;
 
         public ChatRoomController(IChatRepository repository)
@@ -18,10 +19,11 @@ namespace ChatApp.Controllers
             _repository = repository;
         }
 
-        // Get all chat rooms
+        // Get all chat rooms with their users and messages
         [HttpGet]
         public ActionResult<IEnumerable<ChatRoomDto>> GetChatRooms()
         {
+            // Retrieve chat rooms from the repository and map to ChatRoomDto
             var chatRooms = _repository.GetChatRooms()
                 .Select(r => new ChatRoomDto
                 {
@@ -46,13 +48,15 @@ namespace ChatApp.Controllers
             return Ok(chatRooms);
         }
 
-        // Get a specific chat room by ID
+        // Get a specific chat room by its ID
         [HttpGet("{id}")]
         public ActionResult<ChatRoomDto> GetChatRoom(int id)
         {
+            // Retrieve the chat room by ID
             var chatRoom = _repository.GetChatRoom(id);
             if (chatRoom == null) return NotFound();
 
+            // Map the chat room data to ChatRoomDto
             var chatRoomDto = new ChatRoomDto
             {
                 Id = chatRoom.Id,
@@ -76,12 +80,14 @@ namespace ChatApp.Controllers
             return Ok(chatRoomDto);
         }
 
-        // Create a new chat room
+        // Create a new chat room and return the created ChatRoomDto
         [HttpPost]
         public ActionResult<ChatRoomDto> CreateChatRoom(ChatRoom chatRoom)
         {
+            // Add the new chat room to the repository
             var createdRoom = _repository.AddChatRoom(chatRoom);
 
+            // Map the created room to ChatRoomDto
             var chatRoomDto = new ChatRoomDto
             {
                 Id = createdRoom.Id,
@@ -105,10 +111,11 @@ namespace ChatApp.Controllers
             return CreatedAtAction(nameof(GetChatRoom), new { id = createdRoom.Id }, chatRoomDto);
         }
 
-        // Create a simple chat room
+        // Create a simple chat room with no users or messages
         [HttpPost("create")]
         public ActionResult<ChatRoomDto> CreateSimpleChatRoom(CreateChatRoomDto chatRoomDto)
         {
+            // Initialize a new ChatRoom object
             var chatRoom = new ChatRoom
             {
                 Name = chatRoomDto.Name,
@@ -116,8 +123,10 @@ namespace ChatApp.Controllers
                 Messages = new List<ChatMessage>()
             };
 
+            // Add the chat room to the repository
             var createdRoom = _repository.AddChatRoom(chatRoom);
 
+            // Map the created room to ChatRoomDto
             var responseDto = new ChatRoomDto
             {
                 Id = createdRoom.Id,
@@ -141,13 +150,15 @@ namespace ChatApp.Controllers
             return CreatedAtAction(nameof(GetChatRoom), new { id = createdRoom.Id }, responseDto);
         }
 
-        // Get all messages for a specific chat room
+        // Get all messages in a specific chat room by chatRoomId
         [HttpGet("{chatRoomId}/messages")]
         public ActionResult<IEnumerable<ChatMessageDto>> GetMessages(int chatRoomId)
         {
+            // Retrieve the messages for the given chat room
             var messages = _repository.GetMessages(chatRoomId);
             if (messages == null) return NotFound();
 
+            // Map messages to ChatMessageDto
             var messageDtos = messages.Select(m => new ChatMessageDto
             {
                 Id = m.Id,
@@ -162,21 +173,24 @@ namespace ChatApp.Controllers
         }
 
         // Send a message in a specific chat room
-        // Send a message in a specific chat room
         [HttpPost("{chatRoomId}/messages")]
         public ActionResult<ChatMessageDto> SendMessage(int chatRoomId, [FromBody] CreateMessageDto messageDto)
         {
+            // Validate the message data
             if (messageDto == null || string.IsNullOrWhiteSpace(messageDto.Message) || messageDto.UserId <= 0)
             {
                 return BadRequest(new { message = "Invalid message data." });
             }
 
+            // Retrieve the user by UserId
             var user = _repository.GetUserById(messageDto.UserId);
             if (user == null) return NotFound(new { message = "User not found." });
 
+            // Retrieve the chat room by chatRoomId
             var chatRoom = _repository.GetChatRoom(chatRoomId);
             if (chatRoom == null) return NotFound(new { message = "Chat room not found." });
 
+            // Create a new ChatMessage object
             var message = new ChatMessage
             {
                 Message = messageDto.Message,
@@ -185,8 +199,10 @@ namespace ChatApp.Controllers
                 ChatRoomId = chatRoomId
             };
 
+            // Add the message to the repository
             _repository.AddMessage(message);
 
+            // Map the message to ChatMessageDto
             var messageResponseDto = new ChatMessageDto
             {
                 Id = message.Id,
@@ -197,7 +213,7 @@ namespace ChatApp.Controllers
                 ChatRoomId = message.ChatRoomId
             };
 
-            // Use nameof with controller specified
+            // Return the created message using CreatedAtAction
             return CreatedAtAction(
                 actionName: nameof(MessageController.GetMessageById),
                 controllerName: "Message",
@@ -205,6 +221,5 @@ namespace ChatApp.Controllers
                 value: messageResponseDto
             );
         }
-
     }
 }

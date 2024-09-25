@@ -13,6 +13,7 @@ namespace ChatApp.Controllers
     [Route("api/[controller]")]
     public class UserController : ControllerBase
     {
+        // Injecting the IChatRepository dependency and setting the uploads folder path
         private readonly IChatRepository _repository;
         private readonly string _uploadsFolderPath = Path.Combine(Directory.GetCurrentDirectory(), "uploads");
 
@@ -29,9 +30,11 @@ namespace ChatApp.Controllers
         [HttpGet("{chatRoomId}/users")]
         public ActionResult<IEnumerable<UserDto>> GetUsersInChatRoom(int chatRoomId)
         {
+            // Retrieve the chat room from the repository
             var chatRoom = _repository.GetChatRoom(chatRoomId);
             if (chatRoom == null) return NotFound();
 
+            // Map the users in the chat room to a list of UserDto objects
             var users = chatRoom.Users.Select(u => new UserDto
             {
                 Id = u.Id,
@@ -45,15 +48,18 @@ namespace ChatApp.Controllers
         [HttpPost("{chatRoomId}/users")]
         public ActionResult AddUserToChatRoom(int chatRoomId, UserDto userDto)
         {
+            // Retrieve the chat room from the repository
             var chatRoom = _repository.GetChatRoom(chatRoomId);
             if (chatRoom == null) return NotFound();
 
+            // Create a new user object from the provided UserDto
             var user = new User
             {
                 Id = userDto.Id,
                 Username = userDto.Username
             };
 
+            // Add the user to the chat room
             _repository.AddUserToRoom(chatRoomId, user);
             return NoContent();
         }
@@ -66,12 +72,14 @@ namespace ChatApp.Controllers
         [HttpGet("{userId}/profile")]
         public ActionResult<UserDto> GetUserProfile(int userId)
         {
+            // Retrieve the user from the repository by their ID
             var user = _repository.GetUser(userId);
             if (user == null)
             {
                 return NotFound("User not found.");
             }
 
+            // Map user data to UserDto, including the avatar URL
             var userDto = new UserDto
             {
                 Id = user.Id,
@@ -82,10 +90,11 @@ namespace ChatApp.Controllers
             return Ok(userDto);
         }
 
-        // Upload avatar for user
+        // Upload avatar for a user
         [HttpPost("{userId}/upload-avatar")]
         public async Task<IActionResult> UploadAvatar(int userId, [FromForm] IFormFile avatar)
         {
+            // Check if a file was uploaded and validate the file size
             if (avatar == null || avatar.Length == 0)
             {
                 return BadRequest("No file uploaded.");
@@ -96,11 +105,13 @@ namespace ChatApp.Controllers
                 return BadRequest("File size exceeds limit (1MB).");
             }
 
+            // Ensure the uploads directory exists, create if not
             if (!Directory.Exists(_uploadsFolderPath))
             {
                 Directory.CreateDirectory(_uploadsFolderPath);
             }
 
+            // Generate a unique filename and save the file to the uploads folder
             var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(avatar.FileName);
             var filePath = Path.Combine(_uploadsFolderPath, uniqueFileName);
 
@@ -109,6 +120,7 @@ namespace ChatApp.Controllers
                 await avatar.CopyToAsync(stream);
             }
 
+            // Retrieve the user and update their AvatarUrl property
             var user = _repository.GetUser(userId);
             if (user == null)
             {
@@ -121,15 +133,18 @@ namespace ChatApp.Controllers
             return Ok(new { avatarUrl = user.AvatarUrl });
         }
 
+        // Get the avatar image by filename
         [HttpGet("avatar/{filename}")]
         public IActionResult GetAvatar(string filename)
         {
+            // Get the avatar file path
             var filePath = Path.Combine(_uploadsFolderPath, filename);
             if (!System.IO.File.Exists(filePath))
             {
                 return NotFound("Avatar not found.");
             }
 
+            // Return the file as a response, with the appropriate content type
             var fileBytes = System.IO.File.ReadAllBytes(filePath);
             var contentType = "image/jpeg"; // Default to jpeg
             if (filename.EndsWith(".png"))
@@ -139,15 +154,18 @@ namespace ChatApp.Controllers
             return File(fileBytes, contentType);
         }
 
+        // Delete a user's avatar
         [HttpDelete("{userId}/avatar")]
         public IActionResult DeleteAvatar(int userId)
         {
+            // Retrieve the user by ID
             var user = _repository.GetUser(userId);
             if (user == null)
             {
                 return NotFound("User not found.");
             }
 
+            // If the user has an avatar, delete the file and clear the AvatarUrl
             if (!string.IsNullOrEmpty(user.AvatarUrl))
             {
                 var filePath = Path.Combine(_uploadsFolderPath, Path.GetFileName(user.AvatarUrl));
@@ -161,7 +179,6 @@ namespace ChatApp.Controllers
 
             return NoContent();
         }
-
 
     }
 }
